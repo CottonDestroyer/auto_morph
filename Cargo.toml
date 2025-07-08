@@ -1,0 +1,13 @@
+[package]
+name = "auto_morph"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+eframe = { version = "0.31.1", default-features = true, features = [
+    "default_fonts", # Embed the default egui fonts.
+    "wgpu",          # Use the glow rendering backend. Alternative: "wgpu".,   # Enable restoring app state when restarting the app.        # To support older Linux distributions (restores one of the default features)
+] }
+egui-file-dialog = "0.10.0"
+enigo = "0.5.0"
+rdev = "0.5.3"
