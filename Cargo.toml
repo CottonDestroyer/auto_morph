@@ -15,8 +15,8 @@ objc = "0.2"
 rdev = "0.5.3"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-core-graphics = "0.25.0"
-core-foundation = "0.10.1" 
+core-graphics = "0.22"
+core-foundation = "0.9" 
 
 [package.metadata.bundle]
 name = "AutoMorpher"
@@ -28,3 +28,12 @@ short_description = "An application for automating morph commands."
 long_description = """
 An application that listens for a global hotkey to automate typing morph commands into the roblox game SCP: Roleplay.
 """
+
+[profile.release]
+opt-level = 3
+lto = "fat"             
+codegen-units = 1       
+panic = "abort"         
+strip = true            
+debug = false           
+incremental = false     

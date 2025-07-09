@@ -5,6 +5,8 @@ use core_graphics::event::{
     CGEvent, CGEventFlags, CGEventTap, CGEventTapLocation, CGEventTapOptions, CGEventTapPlacement,
     CGEventType,
 };
+#[cfg(target_os = "windows")]
+use rdev::{Event, EventType};
 use eframe::egui;
 use egui_file_dialog::FileDialog;
 use enigo::{Direction, Enigo, Key, Keyboard, Settings};
@@ -14,7 +16,7 @@ use std::io::Read;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, mpsc};
-use rdev::{Event, EventType};
+
 use copypasta::{ClipboardProvider, ClipboardContext};
 
 
@@ -40,10 +42,10 @@ fn copy_paste(text: &str, enigo: &mut Enigo) {
         enigo.key(Key::Control, Direction::Release).unwrap();
     }
 
-        #[cfg(target_os = "macos")] {
-        enigo.key(Key::Meta, Direction::Press);
-        enigo.key(Key::V, Direction::Click);
-        enigo.key(Key::Meta, Direction::Release);
+    #[cfg(target_os = "macos")] {
+        enigo.key(Key::Meta, Direction::Press).unwrap();
+        enigo.key(Key::Unicode('v'), Direction::Click).unwrap();
+        enigo.key(Key::Meta, Direction::Release).unwrap();
     }
 }
 
@@ -182,19 +184,19 @@ impl App {
         std::thread::spawn(move || {
             log_message(&log, "Starting Windows key listener thread...", &ctx);
 
-            let right_shift_is_down = Cell::new(false);
+            let pressed = Cell::new(false);
 
             let _ = rdev::listen(move |event: Event| {
                 if let EventType::KeyPress(key) = event.event_type {
-                    if key == rdev::Key::ShiftRight && !right_shift_is_down.get() {
+                    if key == rdev::Key::ShiftRight && !pressed.get() {
                         log_message(&log, "Right Shift (hotkey) PRESSED!", &ctx);
-                        right_shift_is_down.set(true);
+                        pressed.set(true);
                         let _ = tx.send(());
                     }
                 } else if let EventType::KeyRelease(key) = event.event_type {
-                    if key == rdev::Key::ShiftRight && right_shift_is_down.get() {
+                    if key == rdev::Key::ShiftRight && pressed.get() {
                         //log_message(&log, "Right Shift (hotkey) RELEASED!", &ctx);
-                        right_shift_is_down.set(false);
+                        pressed.set(false);
                     }
                 }
             });
@@ -310,8 +312,8 @@ impl eframe::App for App {
             });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.label("Note for mac users: If the hotkey doesn't work, grant Accessibility & Input Monitoring permissions in System Settings and restart the app.");
-            ui.separator();
+            /*ui.label("Note for mac users: If the hotkey doesn't work, grant Accessibility & Input Monitoring permissions in System Settings and restart the app.");
+            ui.separator();*/
 
             ui.add(
                 egui::TextEdit::multiline(&mut self.txt_cmds)
