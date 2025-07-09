@@ -1,6 +1,6 @@
 [package]
 name = "auto_morph"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 
 [dependencies]
@@ -31,9 +31,9 @@ An application that listens for a global hotkey to automate typing morph command
 
 [profile.release]
 opt-level = 3
-lto = "fat"             
-codegen-units = 1       
-panic = "abort"         
+lto = "fat"
+codegen-units = 1
+panic = "abort"
 strip = true            
-debug = false           
-incremental = false     
+debug = false
+incremental = false

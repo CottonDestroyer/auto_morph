@@ -415,7 +415,7 @@ dependencies = [
 
 [[package]]
 name = "auto_morph"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "copypasta",
  "core-foundation 0.10.1",
