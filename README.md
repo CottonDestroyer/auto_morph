@@ -41,7 +41,7 @@ This guide is for **Windows users** who want to either download the prebuilt `.e
 3. **Give execute permission (if needed)**  
    macOS might block the binary by default. Run:
    ```sh
-   chmod +x AutoMorpher
+   chmod +x AutoMorpher.app
    ```
 
 4. **Run the application**
@@ -49,7 +49,7 @@ This guide is for **Windows users** who want to either download the prebuilt `.e
    open -a AutoMorpher.app
    ```
 
-> 🛡️ macOS Gatekeeper may block the app since it isn't signed. If prompted, go to **System Preferences > Security & Privacy**, and allow it manually under the "General" tab.
+> 🛡️ macOS Gatekeeper may block the app since it isn't signed. If prompted, go to **System Preferences > Security & Privacy**, and allow it manually under the "Security" tab.
 
 ---
 
