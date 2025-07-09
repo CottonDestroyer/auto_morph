@@ -89,7 +89,7 @@ This guide is for **Windows users** who want to either download the prebuilt `.e
 
 2. **Clone the repository**
    ```sh
-   git clone https://github.com/yourusername/AutoMorpher.git](https://github.com/CottonDestroyer/auto_morph.git
+   git clone https://github.com/CottonDestroyer/auto_morph.git
    cd auto_morph
    ```
 
