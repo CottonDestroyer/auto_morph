@@ -19,11 +19,11 @@ use std::sync::{Arc, Mutex, mpsc};
 
 use copypasta::{ClipboardContext, ClipboardProvider};
 
-static IS_SIMULATING: AtomicBool = AtomicBool::new(false);
+static IS_SIMULATING: AtomicBool = AtomicBool::new(false); // bool to not conflict the keybind scanning/simulating
 
 fn log_message(log: &Arc<Mutex<Vec<String>>>, message: &str, ctx: &egui::Context) {
     let mut log_guard = log.lock().unwrap();
-    println!("{}", message);
+    //println!("{}", message);
     log_guard.push(message.to_owned());
     if log_guard.len() > 100 {
         log_guard.remove(0);
@@ -61,7 +61,7 @@ pub struct App {
 
 impl App {
     pub fn new(cc: &eframe::CreationContext) -> Self {
-        let (tx, key_receiver) = mpsc::channel();
+        let (tx, key_receiver) = mpsc::channel();  // channel for receiving signal to execute morph macro
 
         let debug_log = Arc::new(Mutex::new(Vec::new()));
         let ctx = cc.egui_ctx.clone();
@@ -103,7 +103,7 @@ impl App {
                     "Hotkey signal received, spawning a new simulation thread.",
                     &logic_ctx,
                 );
-
+                // spawning a new thread is required for MacOS to not crash on runtime
                 std::thread::spawn(move || {
                     App::morph(&cmds, delay, thread_log, &thread_ctx);
                 });
@@ -244,7 +244,7 @@ impl App {
     }
 }
 
-impl eframe::App for App {
+impl eframe::App for App {  // all ts is self explanatory
     fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("title").show(ctx, |ui| {
             ui.heading("SCP:RP Auto Morpher 🎯");
