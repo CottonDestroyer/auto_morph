@@ -28,13 +28,13 @@
 ## 🏃 Run Using Prebuilt Release Binary (macOS)
 
 1. **Download the release**  
-   Head over to the [Releases](../../releases) page and download the file named:  
-   `AutoMorpher_macos_x64_86.zip`
+   Head over to the [Releases](../../releases) page and download the file corresponding to your macOS architecture:  
+   `AutoMorpher_macos_x86_64.zip or AutoMorpher_macos_aarch64.zip`
 
 2. **Extract the archive**  
    You can extract it using Finder or via the terminal:
    ```sh
-   unzip AutoMorpher_macos_x64_86.zip
+   unzip AutoMorpher_macos_xxxxxx.zip
    ```
 
 3. **Give execute permission (if needed)**  
