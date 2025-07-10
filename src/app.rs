@@ -3,13 +3,13 @@ use core_foundation::runloop::{CFRunLoop, kCFRunLoopCommonModes};
 #[cfg(target_os = "macos")]
 use core_graphics::event::{
     CGEvent, CGEventFlags, CGEventTap, CGEventTapLocation, CGEventTapOptions, CGEventTapPlacement,
-    CGEventType,
+    CGEventType, CallbackResult,
 };
-#[cfg(target_os = "windows")]
-use rdev::{Event, EventType};
 use eframe::egui;
 use egui_file_dialog::FileDialog;
 use enigo::{Direction, Enigo, Key, Keyboard, Settings};
+#[cfg(target_os = "windows")]
+use rdev::{Event, EventType};
 use std::cell::Cell;
 use std::fs;
 use std::io::Read;
@@ -17,8 +17,7 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, mpsc};
 
-use copypasta::{ClipboardProvider, ClipboardContext};
-
+use copypasta::{ClipboardContext, ClipboardProvider};
 
 static IS_SIMULATING: AtomicBool = AtomicBool::new(false);
 
@@ -36,15 +35,17 @@ fn copy_paste(text: &str, enigo: &mut Enigo) {
     let mut ctx = ClipboardContext::new().unwrap();
     ctx.set_contents(text.to_owned()).unwrap();
 
-    #[cfg(target_os = "windows")] {
+    #[cfg(target_os = "windows")]
+    {
         enigo.key(Key::Control, Direction::Press).unwrap();
         enigo.key(Key::V, Direction::Click).unwrap();
         enigo.key(Key::Control, Direction::Release).unwrap();
     }
 
-    #[cfg(target_os = "macos")] {
+    #[cfg(target_os = "macos")]
+    {
         enigo.key(Key::Meta, Direction::Press).unwrap();
-        enigo.key(Key::Unicode('v'), Direction::Click).unwrap();
+        enigo.key(Key::Other(0x00000009), Direction::Click).unwrap();
         enigo.key(Key::Meta, Direction::Release).unwrap();
     }
 }
@@ -68,7 +69,7 @@ impl App {
         let app = Self {
             cmds: Arc::new(Mutex::new(String::new())),
             txt_cmds: String::new(),
-            delay: Arc::new(Mutex::new("30".to_owned())),
+            delay: Arc::new(Mutex::new("40".to_owned())),
             file_dialog: FileDialog::new(),
             file: None,
             debug_log: Arc::clone(&debug_log),
@@ -83,22 +84,29 @@ impl App {
 
         std::thread::spawn(move || {
             for _ in key_receiver {
-                log_message(
-                    &log_clone,
-                    "Hotkey signal received in logic thread.",
-                    &logic_ctx,
-                );
-                if !IS_SIMULATING.load(Ordering::SeqCst) {
-                    let cmds = cmds_clone.lock().unwrap();
-                    let delay = delay_clone.lock().unwrap().parse::<u64>().unwrap_or(30);
-                    App::morph(&cmds, delay, Arc::clone(&log_clone), &logic_ctx);
-                } else {
+                if IS_SIMULATING.load(Ordering::SeqCst) {
                     log_message(
                         &log_clone,
                         "Simulation already in progress, ignoring hotkey.",
                         &logic_ctx,
                     );
+                    continue;
                 }
+
+                let cmds = cmds_clone.lock().unwrap().clone();
+                let delay = delay_clone.lock().unwrap().parse::<u64>().unwrap_or(40);
+                let thread_log = Arc::clone(&log_clone);
+                let thread_ctx = logic_ctx.clone();
+
+                log_message(
+                    &log_clone,
+                    "Hotkey signal received, spawning a new simulation thread.",
+                    &logic_ctx,
+                );
+
+                std::thread::spawn(move || {
+                    App::morph(&cmds, delay, thread_log, &thread_ctx);
+                });
             }
         });
 
@@ -112,8 +120,8 @@ impl App {
             let right_shift_is_down = Cell::new(false);
 
             let log_for_callback = Arc::clone(&log);
-            let callback_ctx = ctx.clone(); // Clone the context for the callback.
-            let callback = move |_, _, event: &CGEvent| -> Option<CGEvent> {
+            let callback_ctx = ctx.clone();
+            let callback = move |_, _, event: &CGEvent| -> CallbackResult {
                 let keycode = event.get_integer_value_field(9);
 
                 if keycode == 60 {
@@ -127,18 +135,12 @@ impl App {
                             &callback_ctx,
                         );
                         let _ = tx.send(());
-                    } else if !a_shift_key_is_pressed && right_shift_is_down.get() {
-                        /*log_message(
-                            &log_for_callback,
-                            "Right Shift (hotkey) RELEASED!",
-                            &callback_ctx,
-                        );*/
                     }
 
                     right_shift_is_down.set(a_shift_key_is_pressed);
                 }
 
-                Some(event.to_owned())
+                CallbackResult::Keep
             };
 
             let events_of_interest = vec![CGEventType::FlagsChanged];
@@ -153,7 +155,7 @@ impl App {
             if let Ok(tap) = tap {
                 log_message(&log, "Event tap created successfully.", &ctx);
                 unsafe {
-                    let loop_source = tap.mach_port.create_runloop_source(0).unwrap();
+                    let loop_source = tap.mach_port().create_runloop_source(0).unwrap();
 
                     let current_loop = CFRunLoop::get_current();
                     current_loop.add_source(&loop_source, kCFRunLoopCommonModes);
@@ -180,7 +182,6 @@ impl App {
         log: Arc<Mutex<Vec<String>>>,
         ctx: egui::Context,
     ) {
-
         std::thread::spawn(move || {
             log_message(&log, "Starting Windows key listener thread...", &ctx);
 
@@ -218,12 +219,18 @@ impl App {
             }
             log_message(&log, &format!("Morphing line: {}", line), ctx);
 
-            #[cfg(target_os = "windows")] {enigo.raw(40, Direction::Click).unwrap()}
-            #[cfg(target_os = "macos")] {enigo.raw(39, Direction::Click).unwrap()}
+            #[cfg(target_os = "windows")]
+            {
+                enigo.raw(40, Direction::Click).unwrap()
+            }
+            #[cfg(target_os = "macos")]
+            {
+                enigo.raw(39, Direction::Click).unwrap()
+            }
             std::thread::sleep(std::time::Duration::from_millis(delay));
 
             enigo.key(Key::Backspace, Direction::Click).unwrap();
-            std::thread::sleep(std::time::Duration::from_millis(delay/2));
+            std::thread::sleep(std::time::Duration::from_millis(delay / 2));
 
             copy_paste(line, &mut enigo);
 
@@ -312,8 +319,10 @@ impl eframe::App for App {
             });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            /*ui.label("Note for mac users: If the hotkey doesn't work, grant Accessibility & Input Monitoring permissions in System Settings and restart the app.");
-            ui.separator();*/
+            #[cfg(target_os = "macos")] {
+            ui.label("Note for mac users: If the hotkey doesn't work, grant Accessibility & Input Monitoring permissions in System Settings and restart the app.");
+            ui.separator();
+            }
 
             ui.add(
                 egui::TextEdit::multiline(&mut self.txt_cmds)

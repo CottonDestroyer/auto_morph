@@ -1,6 +1,6 @@
 [package]
 name = "auto_morph"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 
 [dependencies]
@@ -15,8 +15,8 @@ objc = "0.2"
 rdev = "0.5.3"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-core-graphics = "0.22"
-core-foundation = "0.9" 
+core-graphics = "0.25.0"
+core-foundation = "0.10.1" 
 
 [package.metadata.bundle]
 name = "AutoMorpher"
@@ -31,9 +31,9 @@ An application that listens for a global hotkey to automate typing morph command
 
 [profile.release]
 opt-level = 3
-lto = "fat"             
-codegen-units = 1       
-panic = "abort"         
+lto = "fat"
+codegen-units = 1
+panic = "abort"
 strip = true            
-debug = false           
-incremental = false     
+debug = false
+incremental = false
