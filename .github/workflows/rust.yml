@@ -6,21 +6,41 @@ on:
   pull_request:
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-latest, macos-13, windows-latest]
-
+  build_macos_latest:
+    name: Build on macOS (latest ARM64)
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Build
         run: cargo build --release
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ runner.os }}-build
-          path: |
-            build/release/*
+          name: macos-latest-build
+          path: build/release/*
+
+  build_macos_13:
+    name: Build on macOS (Intel)
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: cargo build --release
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-13-build
+          path: build/release/*
+
+  build_windows:
+    name: Build on Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: cargo build --release
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-latest-build
+          path: build/release/*
