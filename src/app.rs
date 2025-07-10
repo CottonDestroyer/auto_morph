@@ -69,7 +69,7 @@ impl App {
         let app = Self {
             cmds: Arc::new(Mutex::new(String::new())),
             txt_cmds: String::new(),
-            delay: Arc::new(Mutex::new("30".to_owned())),
+            delay: Arc::new(Mutex::new("40".to_owned())),
             file_dialog: FileDialog::new(),
             file: None,
             debug_log: Arc::clone(&debug_log),
@@ -94,7 +94,7 @@ impl App {
                 }
 
                 let cmds = cmds_clone.lock().unwrap().clone();
-                let delay = delay_clone.lock().unwrap().parse::<u64>().unwrap_or(30);
+                let delay = delay_clone.lock().unwrap().parse::<u64>().unwrap_or(40);
                 let thread_log = Arc::clone(&log_clone);
                 let thread_ctx = logic_ctx.clone();
 
