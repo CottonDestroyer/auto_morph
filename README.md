@@ -14,13 +14,13 @@
 
 1. Go to the [Releases](https://github.com/CottonDestroyer/auto_morph/releases) page.
 2. Download the latest Windows binary:
-   - Example: `auto_morph_standalone.exe`
+   - Example: `auto_morph_windows_x86_64.exe`
 3. (Optional) Move the `.exe` file to a convenient folder (like `C:\auto_morph\`).
 4. Double-click the `.exe` to run, or use the Command Prompt:
 
    ```cmd
    cd C:\path\to\auto_morph\
-   auto_morph.exe
+   auto_morph_windows_x86_64.exe
    ```
 
 ---
