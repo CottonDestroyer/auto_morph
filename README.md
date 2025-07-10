@@ -7,7 +7,6 @@
 
 
 
-This guide is for **Windows users** who want to either download the prebuilt `.exe` or build it from source.
 
 ---
 
@@ -111,8 +110,8 @@ This guide is for **Windows users** who want to either download the prebuilt `.e
 
 - **Rust** (via [rustup](https://rustup.rs/))
 - **Git** (for cloning the repository)
-- **Windows 10/11**, 64-bit
-
+- **Windows 10/11** | **MacOS**
+- 64-bit OS
 ---
 
 ## 📄 License
