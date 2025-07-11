@@ -1,3 +1,4 @@
+# The name of your GitHub Actions workflow.
 name: Build
 
 on:
@@ -8,34 +9,46 @@ on:
 
 jobs:
   build_macos_arm64:
-    name: Build on macOS (ARM64)
-    runs-on: macos-latest 
+    name: Build .app on macOS (ARM64)
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
-      - name: Build binary
-        run: cargo build --release --bin auto_morph
+      - name: Install cargo-bundle
+        run: cargo install cargo-bundle
+      - name: Build .app bundle
+        run: cargo bundle --release --bin auto_morph
+      - name: Zip the .app bundle
+        run: |
+          cd target/release/bundle/macos
+          zip -r "../../../auto_morph-macos-arm64.zip" "./auto_morph.app"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: auto_morph-macos-aarch64
-          path: target/release/auto_morph
+          name: auto_morph-macos-arm64
+          path: auto_morph-macos-arm64.zip
 
   build_macos_intel:
-    name: Build on macOS (Intel)
+    name: Build .app on macOS (Intel)
     runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
-      - name: Build binary
-        run: cargo build --release --bin auto_morph
+      - name: Install cargo-bundle
+        run: cargo install cargo-bundle
+      - name: Build .app bundle
+        run: cargo bundle --release --bin auto_morph
+      - name: Zip the .app bundle
+        run: |
+          cd target/release/bundle/macos
+          zip -r "../../../auto_morph-macos-intel.zip" "./auto_morph.app"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: auto_morph-macos-intel
-          path: target/release/auto_morph
+          path: auto_morph-macos-intel.zip
 
   build_windows:
     name: Build on Windows
