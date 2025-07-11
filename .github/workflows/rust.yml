@@ -4,49 +4,50 @@ on:
   push:
     branches: [ master ]
   pull_request:
+    branches: [ master ]
 
 jobs:
-  build_macos_latest:
-    name: Build on macOS (latest ARM64)
-    runs-on: macos-latest
+  build_macos_arm64:
+    name: Build on macOS (ARM64)
+    runs-on: macos-latest 
     steps:
       - uses: actions/checkout@v4
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2.8.0
-      - name: Build
-        run: cargo build --release
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+      - name: Build binary
+        run: cargo build --release --bin auto_morph
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macos-latest-build
-          path: build/release/*
+          name: your_binary_name-macos-aarch64
+          path: target/release/auto_morph
 
-  build_macos_13:
+  build_macos_intel:
     name: Build on macOS (Intel)
     runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2.8.0
-      - name: Build
-        run: cargo build --release
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+      - name: Build binary
+        run: cargo build --release --bin auto_morph
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macos-13-build
-          path: build/release/*
+          name: your_binary_name-macos-intel
+          path: target/release/auto_morph
 
   build_windows:
     name: Build on Windows
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2.8.0
-      - name: Build
-        run: cargo build --release
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+      - name: Build binary
+        run: cargo build --release --bin auto_morph
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windows-latest-build
-          path: build/release/*
+          name: your_binary_name-windows-x64
+          path: target/release/auto_morph.exe
