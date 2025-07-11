@@ -21,7 +21,7 @@ jobs:
         run: cargo bundle --release --bin auto_morph
       - name: Zip the .app bundle
         run: |
-          cd target/release/bundle/macos
+          cd target/release/bundle/osx
           zip -r "../../../auto_morph-macos-arm64.zip" "./auto_morph.app"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -42,7 +42,7 @@ jobs:
         run: cargo bundle --release --bin auto_morph
       - name: Zip the .app bundle
         run: |
-          cd target/release/bundle/macos
+          cd target/release/bundle/osx
           zip -r "../../../auto_morph-macos-intel.zip" "./auto_morph.app"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
