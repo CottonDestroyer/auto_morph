@@ -21,12 +21,12 @@ jobs:
       - name: Zip the .app bundle
         run: |
           cd target/release/bundle/osx
-          zip -r "../../../auto_morph-macos-arm64.zip" "./auto_morph.app"
+          zip -r "../../../auto_morph.zip" "./auto_morph.app"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: auto_morph-macos-arm64
-          path: auto_morph-macos-arm64.zip
+          name: auto_morph-macos-aarch64
+          path: auto_morph-macos-aarch64.zip
 
   build_macos_intel:
     name: Build .app on macOS (Intel)
@@ -42,7 +42,7 @@ jobs:
       - name: Zip the .app bundle
         run: |
           cd target/release/bundle/osx
-          zip -r "../../../auto_morph-macos-intel.zip" "./auto_morph.app"
+          zip -r "../../../auto_morph.zip" "./auto_morph.app"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
