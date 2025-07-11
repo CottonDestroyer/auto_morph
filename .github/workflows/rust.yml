@@ -1,4 +1,3 @@
-# The name of your GitHub Actions workflow.
 name: Build
 
 on:
