@@ -19,7 +19,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: your_binary_name-macos-aarch64
+          name: auto_morph-macos-aarch64
           path: target/release/auto_morph
 
   build_macos_intel:
@@ -34,7 +34,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: your_binary_name-macos-intel
+          name: auto_morph-macos-intel
           path: target/release/auto_morph
 
   build_windows:
@@ -49,5 +49,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: your_binary_name-windows-x64
+          name: auto_morph-windows-x64
           path: target/release/auto_morph.exe
