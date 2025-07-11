@@ -50,6 +50,53 @@ fn copy_paste(text: &str, enigo: &mut Enigo) {
     }
 }
 
+fn commands(cmds: &str, delay: u64, log: Arc<Mutex<Vec<String>>>, ctx: &egui::Context) {
+
+    let mut enigo = Enigo::new(&Settings::default()).unwrap();
+
+    for mut line in cmds.lines() {
+
+
+        if line.trim().is_empty() {
+            continue;
+        }
+
+        if line.chars().next().unwrap() == ':' {
+            line = match line.char_indices().nth(1) {
+                Some((i, _)) => &line[i..],
+                None => ""
+            }
+        }
+
+
+        
+        log_message(&log, &format!("Morphing line: {}", line), ctx);
+
+        #[cfg(target_os = "windows")]
+        {
+            enigo.raw(40, Direction::Click).unwrap()
+        }
+        #[cfg(target_os = "macos")]
+        {
+            enigo.raw(39, Direction::Click).unwrap()
+        }
+        std::thread::sleep(std::time::Duration::from_millis(delay));
+
+        enigo.key(Key::Backspace, Direction::Click).unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(delay / 2));
+
+        copy_paste(line, &mut enigo);
+
+        std::thread::sleep(std::time::Duration::from_millis(delay));
+
+        enigo.key(Key::Return, Direction::Click).unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(delay));
+    }
+
+    IS_SIMULATING.store(false, Ordering::SeqCst);
+    log_message(&log, "Morph process finished.", ctx);
+}
+
 pub struct App {
     txt_cmds: String,
     cmds: Arc<Mutex<String>>,
@@ -211,39 +258,13 @@ impl App {
         }
         log_message(&log, "Starting morph process...", ctx);
         IS_SIMULATING.store(true, Ordering::SeqCst);
-        let mut enigo = Enigo::new(&Settings::default()).unwrap();
+        
+        commands(cmds, delay, log, ctx);
+        
 
-        for line in cmds.lines() {
-            if line.trim().is_empty() {
-                continue;
-            }
-            log_message(&log, &format!("Morphing line: {}", line), ctx);
-
-            #[cfg(target_os = "windows")]
-            {
-                enigo.raw(40, Direction::Click).unwrap()
-            }
-            #[cfg(target_os = "macos")]
-            {
-                enigo.raw(39, Direction::Click).unwrap()
-            }
-            std::thread::sleep(std::time::Duration::from_millis(delay));
-
-            enigo.key(Key::Backspace, Direction::Click).unwrap();
-            std::thread::sleep(std::time::Duration::from_millis(delay / 2));
-
-            copy_paste(line, &mut enigo);
-
-            std::thread::sleep(std::time::Duration::from_millis(delay));
-
-            enigo.key(Key::Return, Direction::Click).unwrap();
-            std::thread::sleep(std::time::Duration::from_millis(delay));
-        }
-        IS_SIMULATING.store(false, Ordering::SeqCst);
-        log_message(&log, "Morph process finished.", ctx);
     }
-}
 
+}
 impl eframe::App for App {  // all ts is self explanatory
     fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("title").show(ctx, |ui| {
@@ -269,6 +290,14 @@ impl eframe::App for App {  // all ts is self explanatory
                         });
                     });
                 });
+
+                ui.separator();
+
+                let reset_button = ui.add_sized([200.0, 80.0], egui::Button::new("Reset"));
+                if reset_button.clicked() {
+                    let mut lock = self.cmds.lock().unwrap();
+                    *lock = "unpermall me\nunpermhats me\nunpermshirt me\nclearstartergear me".to_owned();
+                }
 
                 ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
                     ui.add_space(10.0);
