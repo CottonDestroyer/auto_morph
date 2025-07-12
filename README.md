@@ -14,13 +14,13 @@
 
 1. Go to the [Releases](https://github.com/CottonDestroyer/auto_morph/releases) page.
 2. Download the latest Windows binary:
-   - Example: `auto_morph_windows_x86_64.exe`
+   - Example: `auto_morph-windows-x86_64.exe`
 3. (Optional) Move the `.exe` file to a convenient folder (like `C:\auto_morph\`).
 4. Double-click the `.exe` to run, or use the Command Prompt:
 
    ```cmd
    cd C:\path\to\auto_morph\
-   auto_morph_windows_x86_64.exe
+   auto_morph-windows-x86_64.exe
    ```
 
 ---
@@ -29,23 +29,23 @@
 
 1. **Download the release**  
    Head over to the [Releases](../../releases) page and download the file corresponding to your macOS architecture:  
-   `AutoMorpher_macos_x86_64.zip or AutoMorpher_macos_aarch64.zip`
+   `auto_morph-macos-aarch64.zip or auto_morph-macos-intel.zip`
 
 2. **Extract the archive**  
    You can extract it using Finder or via the terminal:
    ```sh
-   unzip AutoMorpher_macos_xxxxxx.zip
+   unzip auto_morph-macos-xxxxxx.zip
    ```
 
 3. **Give execute permission (if needed)**  
    macOS might block the binary by default. Run:
    ```sh
-   chmod +x AutoMorpher.app
+   chmod +x auto_morph.app
    ```
 
 4. **Run the application**
    ```sh
-   open -a AutoMorpher.app
+   open -a auto_morph.app
    ```
 
 > 🛡️ macOS Gatekeeper may block the app since it isn't signed. If prompted, go to **System Preferences > Security & Privacy**, and allow it manually under the "Security" tab.
@@ -67,7 +67,7 @@
 3. Build the project in release mode:
 
    ```powershell
-   cargo build --release
+   cargo build --release --bin auto_morph
    ```
 
 4. Run the compiled binary:
@@ -94,7 +94,7 @@
 
 3. **Build the project**
    ```sh
-   cargo build --release
+   cargo build --release --bin auto_morph
    ```
 
 4. **Run the compiled binary**
