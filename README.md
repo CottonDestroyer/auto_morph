@@ -44,6 +44,7 @@
    ```
 
 4. **Run the application**
+   You may need to install Rosetta if you're running this on silicon and it's not already installed
    ```sh
    open -a AutoMorpher.app
    ```
