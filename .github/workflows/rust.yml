@@ -7,29 +7,8 @@ on:
     branches: [ master ]
 
 jobs:
-  build_macos_arm64:
-    name: Build .app on macOS (ARM64)
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2.8.0
-      - name: Install cargo-bundle
-        run: cargo install cargo-bundle
-      - name: Build .app bundle
-        run: cargo bundle --release --bin auto_morph
-      - name: Zip the .app bundle
-        run: |
-          cd target/release/bundle/osx
-          zip -r ${{ github.workspace }}/auto_morph.zip ./auto_morph.app
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: auto_morph-macos-aarch64
-          path: auto_morph.zip
-
-  build_macos_intel:
-    name: Build .app on macOS (Intel)
+  build_macos:
+    name: Build .app on macOS
     runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
@@ -46,7 +25,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: auto_morph-macos-intel
+          name: auto_morph-macos
           path: auto_morph.zip
 
   build_windows:
