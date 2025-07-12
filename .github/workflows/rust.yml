@@ -9,7 +9,7 @@ on:
 jobs:
   build_macos_arm64:
     name: Build .app on macOS (ARM64)
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
       - name: Cache Rust dependencies
