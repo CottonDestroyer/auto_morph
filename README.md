@@ -44,6 +44,7 @@
    ```
 
 4. **Run the application**
+   You may need to install Rosetta if you're running this on silicon and it isn't already installed
    ```sh
    open -a auto_morph.app
    ```
