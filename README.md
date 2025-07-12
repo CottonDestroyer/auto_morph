@@ -28,13 +28,13 @@
 ## 🏃 Run Using Prebuilt Release Binary (macOS)
 
 1. **Download the release**  
-   Head over to the [Releases](../../releases) page and download the file corresponding to your macOS architecture:  
-   `auto_morph-macos-aarch64.zip or auto_morph-macos-intel.zip`
+   Head over to the [Releases](../../releases) page and download the zip containing the .app:  
+   `auto_morph-macos.zip`
 
 2. **Extract the archive**  
    You can extract it using Finder or via the terminal:
    ```sh
-   unzip auto_morph-macos-xxxxxx.zip
+   unzip auto_morph-macos.zip
    ```
 
 3. **Give execute permission (if needed)**  
