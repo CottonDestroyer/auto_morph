@@ -21,8 +21,10 @@ use copypasta::{ClipboardContext, ClipboardProvider};
 
 static IS_SIMULATING: AtomicBool = AtomicBool::new(false);
 
+// --- Helper functions to make hotkey display readable ---
 
 #[cfg(target_os = "macos")]
+/// Converts macOS modifier flags into a vector of readable strings.
 fn flags_to_strings(flags: CGEventFlags) -> Vec<String> {
     let mut parts = Vec::new();
     if flags.contains(CGEventFlags::CGEventFlagCommand) {
@@ -41,6 +43,7 @@ fn flags_to_strings(flags: CGEventFlags) -> Vec<String> {
 }
 
 #[cfg(target_os = "macos")]
+/// Converts a macOS keycode into a readable string.
 fn keycode_to_string(keycode: u64) -> String {
     match keycode {
         0 => "A", 1 => "S", 2 => "D", 3 => "F", 4 => "H", 5 => "G", 6 => "Z", 7 => "X",
@@ -59,6 +62,7 @@ fn keycode_to_string(keycode: u64) -> String {
 }
 
 #[cfg(target_os = "windows")]
+/// Cleans up the debug-style output from rdev::Key.
 fn key_to_string(key: &rdev::Key) -> String {
     format!("{:?}", key)
         .replace("Key", "")
@@ -463,6 +467,8 @@ impl eframe::App for App {
                 });
             });
 
+        // **FIX**: The file dialog update and result handling must be called every frame.
+        self.file_dialog.update(ctx);
         if let Some(path) = self.file_dialog.take_picked() {
             log_message(&self.debug_log, &format!("File picked: {:?}", path), ctx);
             self.file = Some(path.to_path_buf());
