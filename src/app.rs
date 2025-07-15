@@ -218,8 +218,18 @@ impl App {
 	            CallbackResult::Keep
 	        };
 
-	        let events = vec![CGEventType::KeyDown, CGEventType::KeyUp, CGEventType::FlagsChanged];
-	        if let Ok(tap) = CGEventTap::new(CGEventTapLocation::HID, CGEventTapPlacement::HeadInsertEventTap, CGEventTapOptions::Default, events, callback) {
+	        let events = vec![
+			CGEventType::KeyDown, 
+			CGEventType::KeyUp, 
+			CGEventType::FlagsChanged
+		];
+	        if let Ok(tap) = CGEventTap::new(
+			CGEventTapLocation::HID, 
+			CGEventTapPlacement::HeadInsertEventTap, 
+			CGEventTapOptions::Default, 
+			events, 
+			callback,
+		) {
 	            log_message(&log, "Event tap created successfully.", &ctx);
 	            unsafe {
 	                let loop_source = tap.mach_port().create_runloop_source(0).unwrap();
@@ -412,7 +422,7 @@ impl eframe::App for App {
         egui::CentralPanel::default().show(ctx, |ui| {
             #[cfg(target_os = "macos")]
             {
-                ui.label("Note for mac users: If hotkeys don't work, grant Accessibility & Input Monitoring permissions in System Settings and restart the app.");
+                ui.label("Note for mac users: If hotkeys don't work, grant Accessibility permissions in System Settings and restart the app.");
                 ui.separator();
             }
 
