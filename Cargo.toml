@@ -15,6 +15,7 @@ objc = "0.2"
 rdev = "0.5.3"
 
 [target.'cfg(target_os = "macos")'.dependencies]
+bitflags = "2.9.1"
 core-graphics = "0.25.0"
 core-foundation = "0.10.1" 
 

@@ -417,6 +417,7 @@ dependencies = [
 name = "auto_morph"
 version = "0.1.3"
 dependencies = [
+ "bitflags 2.9.1",
  "copypasta",
  "core-foundation 0.10.1",
  "core-graphics 0.25.0",
