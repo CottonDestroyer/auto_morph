@@ -4,21 +4,16 @@ use crate::utils::{commands, log_message};
 use {
     crate::macos::{flags_to_strings, keycode_to_string},
     bitflags::Flags,
-    core_foundation::runloop::{kCFRunLoopCommonModes, CFRunLoop},
+    core_foundation::runloop::{CFRunLoop, kCFRunLoopCommonModes},
     core_graphics::event::{
-        CallbackResult, CGEvent, CGEventFlags, CGEventTap, CGEventTapLocation, CGEventTapOptions,
-        CGEventTapPlacement, CGEventType,
+        CGEvent, CGEventFlags, CGEventTap, CGEventTapLocation, CGEventTapOptions,
+        CGEventTapPlacement, CGEventType, CallbackResult,
     },
-};
-
-#[cfg(target_os = "windows")]
-use {
-    crate::windows::key_to_string,
-    rdev::{Event, EventType},
 };
 
 use eframe::egui;
 use egui_file_dialog::FileDialog;
+use re_ui;
 use std::{
     collections::HashSet,
     fs,
@@ -29,6 +24,11 @@ use std::{
         atomic::{AtomicBool, Ordering},
         mpsc,
     },
+};
+#[cfg(target_os = "windows")]
+use {
+    crate::windows::key_to_string,
+    rdev::{Event, EventType},
 };
 
 static IS_SIMULATING: AtomicBool = AtomicBool::new(false);
@@ -67,7 +67,16 @@ impl App {
         let (hotkey_text_tx, hotkey_text_rx) = mpsc::channel();
         let debug_log = Arc::new(Mutex::new(Vec::new()));
         let ctx = cc.egui_ctx.clone();
-
+        re_ui::apply_style_and_install_loaders(&ctx);
+        
+        let mut style = (*cc.egui_ctx.style()).clone();
+        
+        style.visuals.widgets.inactive.bg_stroke = egui::Stroke::new(
+            1.0, // Width
+            egui::Color32::from_gray(80), // Color
+        );
+        cc.egui_ctx.set_style(style);
+        
         let app = Self {
             cmds: Arc::new(Mutex::new(String::new())),
             txt_cmds: String::new(),
@@ -126,130 +135,137 @@ impl App {
     }
 
     #[cfg(target_os = "macos")]
-	fn listen(
-	    &self,
-	    tx: mpsc::Sender<()>,
-	    log: Arc<Mutex<Vec<String>>>,
-	    ctx: egui::Context,
-	    hotkey_text_sender: mpsc::Sender<String>,
-	) {
-	    let is_capturing_hotkey = self.is_capturing_hotkey.clone();
-	    let hotkey_arc = self.hotkey.clone();
-	    let callback_log = log.clone();
-	    let callback_ctx = ctx.clone();
-    
-	    std::thread::spawn(move || {
-	        log_message(&log, "Starting key listener thread...", &ctx);
-    
-	        let pressed_keys = Arc::new(Mutex::new(HashSet::<u64>::new()));
-	        let pressed_flags = Arc::new(Mutex::new(CGEventFlags::empty()));
-	        let hotkey_is_down = Arc::new(AtomicBool::new(false));
-            
-	        let temp_capture_keys = Arc::new(Mutex::new(HashSet::<u64>::new()));
-	        let temp_capture_flags = Arc::new(Mutex::new(CGEventFlags::empty()));
-    
-			let update_display = move |keys: &HashSet<u64>, flags: CGEventFlags| {
-	            let mut key_parts = flags_to_strings(flags);
-	            key_parts.extend(keys.iter().map(|&k| keycode_to_string(k)));
-	            key_parts.sort_unstable();
-	            key_parts.dedup();
-	            let _ = hotkey_text_sender.send(key_parts.join(" + "));
-	        };
-    
-	        let callback = move |_, event_type, event: &CGEvent| {
-	            let mut is_capturing = is_capturing_hotkey.lock().unwrap();
-    
-	            if *is_capturing {
-	                let mut temp_keys = temp_capture_keys.lock().unwrap();
-	                let mut temp_flags = temp_capture_flags.lock().unwrap();
-	                match event_type {
-	                    CGEventType::KeyDown => {
-	                        let keycode = event.get_integer_value_field(9) as u64;
-	                        temp_keys.insert(keycode);
-	                        *temp_flags = event.get_flags();
-	                    }
-	                    CGEventType::FlagsChanged => {
-	                        *temp_flags = event.get_flags();
-	                    }
-	                    CGEventType::KeyUp => {
-	                        if !temp_keys.is_empty() {
-	                            let mut final_hotkey = hotkey_arc.lock().unwrap();
-	                            *final_hotkey = (temp_keys.clone(), *temp_flags);
-	                            update_display(&temp_keys, *temp_flags);
-	                        }
-	                        temp_keys.clear();
-	                        temp_flags.clear();
-	                        *is_capturing = false;
-	                    }
-	                    _ => {}
-	                }
-	                if *is_capturing {
-	                    update_display(&temp_keys, *temp_flags);
-	                }
-	                return CallbackResult::Keep;
-	            }
-    
-	            drop(is_capturing);
-	            let keycode = event.get_integer_value_field(9) as u64;
-	            let current_flags = event.get_flags();
-    
-	            let mut keys = pressed_keys.lock().unwrap();
-	            let mut flags = pressed_flags.lock().unwrap();
-    
-	            match event_type {
-	                CGEventType::KeyDown => {
-	                    keys.insert(keycode);
-	                    *flags = current_flags;
-	                }
-	                CGEventType::KeyUp => {
-	                    keys.remove(&keycode);
-	                    *flags = current_flags;
-	                }
-	                CGEventType::FlagsChanged => {
-	                    *flags = current_flags;
-	                }
-	                _ => return CallbackResult::Keep,
-	            }
-    
-	            let target = hotkey_arc.lock().unwrap();
-				let hotkey_is_met = keys.is_superset(&target.0) && flags.contains(target.1);
-    
-	            if hotkey_is_met {
-	                if hotkey_is_down.compare_exchange(false, true, Ordering::SeqCst, Ordering::Relaxed).is_ok() {
-	                    log_message(&callback_log, "Hotkey PRESSED!", &callback_ctx);
-	                    let _ = tx.send(());
-	                }
-	            } else {
-	                hotkey_is_down.store(false, Ordering::SeqCst);
-	            }
-                
-	            CallbackResult::Keep
-	        };
-    
-	        let events = vec![
-			CGEventType::KeyDown, 
-			CGEventType::KeyUp, 
-			CGEventType::FlagsChanged
-		];
-	        if let Ok(tap) = CGEventTap::new(
-			CGEventTapLocation::HID, 
-			CGEventTapPlacement::HeadInsertEventTap, 
-			CGEventTapOptions::Default, 
-			events, 
-			callback,
-		) {
-	            log_message(&log, "Event tap created successfully.", &ctx);
-	            unsafe {
-	                let loop_source = tap.mach_port().create_runloop_source(0).unwrap();
-	                CFRunLoop::get_current().add_source(&loop_source, kCFRunLoopCommonModes);
-	                tap.enable();
-	                CFRunLoop::run_current();
-	            }
-	        } else {
-	            log_message(&log, "Failed to create event tap. Check macOS permissions.", &ctx);
-	        }
-	    });
-	}
+    fn listen(
+        &self,
+        tx: mpsc::Sender<()>,
+        log: Arc<Mutex<Vec<String>>>,
+        ctx: egui::Context,
+        hotkey_text_sender: mpsc::Sender<String>,
+    ) {
+        let is_capturing_hotkey = self.is_capturing_hotkey.clone();
+        let hotkey_arc = self.hotkey.clone();
+        let callback_log = log.clone();
+        let callback_ctx = ctx.clone();
+
+        std::thread::spawn(move || {
+            log_message(&log, "Starting key listener thread...", &ctx);
+
+            let pressed_keys = Arc::new(Mutex::new(HashSet::<u64>::new()));
+            let pressed_flags = Arc::new(Mutex::new(CGEventFlags::empty()));
+            let hotkey_is_down = Arc::new(AtomicBool::new(false));
+
+            let temp_capture_keys = Arc::new(Mutex::new(HashSet::<u64>::new()));
+            let temp_capture_flags = Arc::new(Mutex::new(CGEventFlags::empty()));
+
+            let update_display = move |keys: &HashSet<u64>, flags: CGEventFlags| {
+                let mut key_parts = flags_to_strings(flags);
+                key_parts.extend(keys.iter().map(|&k| keycode_to_string(k)));
+                key_parts.sort_unstable();
+                key_parts.dedup();
+                let _ = hotkey_text_sender.send(key_parts.join(" + "));
+            };
+
+            let callback = move |_, event_type, event: &CGEvent| {
+                let mut is_capturing = is_capturing_hotkey.lock().unwrap();
+
+                if *is_capturing {
+                    let mut temp_keys = temp_capture_keys.lock().unwrap();
+                    let mut temp_flags = temp_capture_flags.lock().unwrap();
+                    match event_type {
+                        CGEventType::KeyDown => {
+                            let keycode = event.get_integer_value_field(9) as u64;
+                            temp_keys.insert(keycode);
+                            *temp_flags = event.get_flags();
+                        }
+                        CGEventType::FlagsChanged => {
+                            *temp_flags = event.get_flags();
+                        }
+                        CGEventType::KeyUp => {
+                            if !temp_keys.is_empty() {
+                                let mut final_hotkey = hotkey_arc.lock().unwrap();
+                                *final_hotkey = (temp_keys.clone(), *temp_flags);
+                                update_display(&temp_keys, *temp_flags);
+                            }
+                            temp_keys.clear();
+                            temp_flags.clear();
+                            *is_capturing = false;
+                        }
+                        _ => {}
+                    }
+                    if *is_capturing {
+                        update_display(&temp_keys, *temp_flags);
+                    }
+                    return CallbackResult::Keep;
+                }
+
+                drop(is_capturing);
+                let keycode = event.get_integer_value_field(9) as u64;
+                let current_flags = event.get_flags();
+
+                let mut keys = pressed_keys.lock().unwrap();
+                let mut flags = pressed_flags.lock().unwrap();
+
+                match event_type {
+                    CGEventType::KeyDown => {
+                        keys.insert(keycode);
+                        *flags = current_flags;
+                    }
+                    CGEventType::KeyUp => {
+                        keys.remove(&keycode);
+                        *flags = current_flags;
+                    }
+                    CGEventType::FlagsChanged => {
+                        *flags = current_flags;
+                    }
+                    _ => return CallbackResult::Keep,
+                }
+
+                let target = hotkey_arc.lock().unwrap();
+                let hotkey_is_met = keys.is_superset(&target.0) && flags.contains(target.1);
+
+                if hotkey_is_met {
+                    if hotkey_is_down
+                        .compare_exchange(false, true, Ordering::SeqCst, Ordering::Relaxed)
+                        .is_ok()
+                    {
+                        log_message(&callback_log, "Hotkey PRESSED!", &callback_ctx);
+                        let _ = tx.send(());
+                    }
+                } else {
+                    hotkey_is_down.store(false, Ordering::SeqCst);
+                }
+
+                CallbackResult::Keep
+            };
+
+            let events = vec![
+                CGEventType::KeyDown,
+                CGEventType::KeyUp,
+                CGEventType::FlagsChanged,
+            ];
+            if let Ok(tap) = CGEventTap::new(
+                CGEventTapLocation::HID,
+                CGEventTapPlacement::HeadInsertEventTap,
+                CGEventTapOptions::Default,
+                events,
+                callback,
+            ) {
+                log_message(&log, "Event tap created successfully.", &ctx);
+                unsafe {
+                    let loop_source = tap.mach_port().create_runloop_source(0).unwrap();
+                    CFRunLoop::get_current().add_source(&loop_source, kCFRunLoopCommonModes);
+                    tap.enable();
+                    CFRunLoop::run_current();
+                }
+            } else {
+                log_message(
+                    &log,
+                    "Failed to create event tap. Check macOS permissions.",
+                    &ctx,
+                );
+            }
+        });
+    }
 
     #[cfg(target_os = "windows")]
     fn listen(
@@ -378,7 +394,7 @@ impl eframe::App for App {
                     ui.add_space(10.0);
 
                     ui.label("File:");
-                    if ui.add(egui::Button::new("Pick File")).clicked() {
+                    if ui.add_sized([100.0, 30.0], egui::Button::new("Pick File")).clicked() {
                         self.file_dialog.pick_file();
                     }
                     if let Some(path) = &self.file {
@@ -404,7 +420,7 @@ impl eframe::App for App {
                     } else {
                         "Set Hotkey"
                     };
-                    if ui.add(egui::Button::new(button_text)).clicked() && !*is_capturing {
+                    if ui.add_sized([100.0, 30.0], egui::Button::new(button_text)).clicked() && !*is_capturing {
                         *is_capturing = true;
                         self.hotkey_display_text.clear();
                         let _ = self.hotkey_text_sender.send("Recording...".to_string());
