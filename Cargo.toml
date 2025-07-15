@@ -11,11 +11,11 @@ eframe = { version = "0.31.1", default-features = true, features = [
 ] }
 egui-file-dialog = "0.10.0"
 enigo = "0.5.0"
-objc = "0.2"
 rdev = "0.5.3"
 re_ui = "0.23.4"
 
 [target.'cfg(target_os = "macos")'.dependencies]
+objc = "0.2"
 bitflags = "2.9.1"
 core-graphics = "0.25.0"
 core-foundation = "0.10.1" 
