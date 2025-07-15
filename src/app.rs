@@ -1,25 +1,34 @@
-#[cfg(target_os = "macos")]
-use crate::macos::{flags_to_strings, keycode_to_string};
 use crate::utils::{commands, log_message};
-#[cfg(target_os = "windows")]
-use crate::windows::key_to_string;
+
 #[cfg(target_os = "macos")]
-use core_foundation::runloop::{CFRunLoop, kCFRunLoopCommonModes};
-#[cfg(target_os = "macos")]
-use core_graphics::event::{
-    CGEvent, CGEventFlags, CGEventTap, CGEventTapLocation, CGEventTapOptions, CGEventTapPlacement,
-    CGEventType, CallbackResult,
+use {
+    crate::macos::{flags_to_strings, keycode_to_string},
+    core_foundation::runloop::{CFRunLoop, kCFRunLoopCommonModes},
+    core_graphics::event::{
+        CGEvent, CGEventFlags, CGEventTap, CGEventTapLocation, CGEventTapOptions,
+        CGEventTapPlacement, CGEventType, CallbackResult,
+    },
 };
+
+#[cfg(target_os = "windows")]
+use {
+    crate::windows::key_to_string,
+    rdev::{Event, EventType},
+};
+
 use eframe::egui;
 use egui_file_dialog::FileDialog;
-#[cfg(target_os = "windows")]
-use rdev::{Event, EventType};
-use std::collections::HashSet;
-use std::fs;
-use std::io::Read;
-use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex, mpsc};
+use std::{
+    collections::HashSet,
+    fs,
+    io::Read,
+    path::PathBuf,
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
+        mpsc,
+    },
+};
 
 static IS_SIMULATING: AtomicBool = AtomicBool::new(false);
 
@@ -326,7 +335,6 @@ impl eframe::App for App {
         egui::TopBottomPanel::top("title").show(ctx, |ui| {
             ui.heading("SCP:RP Auto Morpher 🎯");
         });
-
         egui::SidePanel::right("right_panel")
             .resizable(false)
             .show(ctx, |ui| {
@@ -431,15 +439,15 @@ impl eframe::App for App {
                 ui.separator();
             }
 
-            ui.add(
-                egui::TextEdit::multiline(&mut self.txt_cmds)
-                    .desired_width(f32::INFINITY)
-                    .desired_rows(10),
-            );
+            ui.add(egui::TextEdit::multiline(&mut self.txt_cmds)
+                .font(egui::FontId::new(16.0, egui::FontFamily::Monospace))
+                .desired_width(f32::INFINITY)
+                .desired_rows(20),
+        );
 
             ui.separator();
 
-            ui.heading("Debug Log");
+            ui.heading("Debug Logs");
             egui::ScrollArea::vertical()
                 .stick_to_bottom(true)
                 .show(ui, |ui| {
