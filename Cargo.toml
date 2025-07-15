@@ -31,11 +31,3 @@ long_description = """
 An application that listens for a global hotkey to automate typing morph commands into the roblox game SCP: Roleplay.
 """
 
-[profile.release]
-opt-level = 3
-lto = "fat"
-codegen-units = 1
-panic = "abort"
-strip = true            
-debug = false
-incremental = false
