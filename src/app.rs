@@ -4,6 +4,7 @@ use crate::utils::{commands, log_message};
 #[cfg(target_os = "windows")]
 use crate::windows::key_to_string;
 #[cfg(target_os = "macos")]
+use bitflags::Flags;
 use core_foundation::runloop::{CFRunLoop, kCFRunLoopCommonModes};
 #[cfg(target_os = "macos")]
 use core_graphics::event::{
@@ -12,7 +13,6 @@ use core_graphics::event::{
 };
 use eframe::egui;
 use egui_file_dialog::FileDialog;
-use bitflags::Flags;
 #[cfg(target_os = "windows")]
 use rdev::{Event, EventType};
 use std::collections::HashSet;
