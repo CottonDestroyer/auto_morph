@@ -5,6 +5,7 @@ use crate::utils::{commands, log_message};
 use crate::windows::key_to_string;
 #[cfg(target_os = "macos")]
 use core_foundation::runloop::{CFRunLoop, kCFRunLoopCommonModes};
+#[cfg(target_os = "macos")]
 use core_graphics::event::{
     CGEvent, CGEventFlags, CGEventTap, CGEventTapLocation, CGEventTapOptions, CGEventTapPlacement,
     CGEventType, CallbackResult,
