@@ -3,16 +3,11 @@ use crate::utils::{commands, log_message};
 #[cfg(target_os = "macos")]
 use {
     crate::macos::{flags_to_strings, keycode_to_string},
-    core_foundation::runloop::{CFRunLoop, kCFRunLoopCommonModes},
+    bitflags::Flags,
+    core_foundation::runloop::{kCFRunLoopCommonModes, CFRunLoop},
     core_graphics::event::{
-        CGEvent, CGEventFlags, CGEventTap, CGEventTapLocation, CGEventTapOptions,
-        CGEventTapPlacement, CGEventType, CallbackResult,
-        bitflags::Flags,
-        core_foundation::runloop::{CFRunLoop, kCFRunLoopCommonModes},
-        core_graphics::event::{
-            CGEvent, CGEventFlags, CGEventTap, CGEventTapLocation, CGEventTapOptions,
-            CGEventTapPlacement, CGEventType, CallbackResult,
-        },
+        CallbackResult, CGEvent, CGEventFlags, CGEventTap, CGEventTapLocation, CGEventTapOptions,
+        CGEventTapPlacement, CGEventType,
     },
 };
 
