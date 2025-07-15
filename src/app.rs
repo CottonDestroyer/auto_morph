@@ -11,6 +11,7 @@ use core_graphics::event::{
 };
 use eframe::egui;
 use egui_file_dialog::FileDialog;
+use bitflags::Flags;
 #[cfg(target_os = "windows")]
 use rdev::{Event, EventType};
 use std::collections::HashSet;
@@ -19,7 +20,6 @@ use std::io::Read;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, mpsc};
-use bitflags::Flags;
 
 static IS_SIMULATING: AtomicBool = AtomicBool::new(false);
 
