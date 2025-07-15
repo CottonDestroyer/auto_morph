@@ -369,9 +369,8 @@ impl eframe::App for App {
                         let reset_text =
                             "unpermall me\nunpermhats me\nunpermshirt me\nclearstartergear me"
                                 .to_owned();
-                        self.txt_cmds = reset_text.clone();
                         *self.cmds.lock().unwrap() = reset_text;
-                        log_message(&self.debug_log, "Commands reset to default.", ctx);
+                        log_message(&self.debug_log, "Commands set to reset.", ctx);
                     }
 
                     ui.add_space(10.0);
