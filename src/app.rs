@@ -425,7 +425,7 @@ impl eframe::App for App {
 					{
 					    ui.label("Hotkey:");
 					    // Use the KeyBindWidget directly on Windows
-					    ui.add(KeyBindWidget::new(&mut self.hotkey.lock().unwrap()));
+					    ui.add_sized([100.0, 30.0], KeyBindWidget::new(&mut self.hotkey.lock().unwrap()));
 					}
 
 					// ## macOS-specific UI for hotkey ##
