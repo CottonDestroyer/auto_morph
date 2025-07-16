@@ -1,4 +1,4 @@
-use crate::utils::{commands, log_message};
+use crate::utils::{commands, log_message, egui_key_to_rdev_key};
 
 #[cfg(target_os = "macos")]
 use {
@@ -25,10 +25,12 @@ use std::{
         mpsc,
     },
 };
+use egui_keybinds::KeyCode;
 #[cfg(target_os = "windows")]
 use {
     crate::windows::key_to_string,
     rdev::{Event, EventType},
+    egui_keybinds::{KeyBind, KeyBindWidget}
 };
 
 static IS_SIMULATING: AtomicBool = AtomicBool::new(false);
@@ -52,7 +54,7 @@ pub struct App {
     file: Option<PathBuf>,
     debug_log: Arc<Mutex<Vec<String>>>,
     #[cfg(target_os = "windows")]
-    hotkey: Arc<Mutex<HashSet<rdev::Key>>>,
+    hotkey: Arc<Mutex<KeyBind>>,
     #[cfg(target_os = "macos")]
     hotkey: Arc<Mutex<(HashSet<u64>, CGEventFlags)>>,
     is_capturing_hotkey: Arc<Mutex<bool>>,
@@ -85,7 +87,7 @@ impl App {
             file: None,
             debug_log: Arc::clone(&debug_log),
             #[cfg(target_os = "windows")]
-            hotkey: Arc::new(Mutex::new(HashSet::from([rdev::Key::ShiftRight]))),
+            hotkey: Arc::new(Mutex::new(KeyBind::new(Some(KeyCode::RShift), Vec::new()))),
             #[cfg(target_os = "macos")]
             hotkey: Arc::new(Mutex::new((HashSet::new(), CGEventFlags::CGEventFlagShift))),
             is_capturing_hotkey: Arc::new(Mutex::new(false)),
@@ -303,7 +305,7 @@ impl App {
                             let _ = hotkey_text_sender.send(key_names.join(" + "));
                         } else {
                             let target_hotkey = hotkey_arc.lock().unwrap();
-                            if !target_hotkey.is_empty() && *target_hotkey == *p_keys {
+                            if p_keys.contains(&egui_key_to_rdev_key(target_hotkey.key.clone().unwrap_or(KeyCode::RShift)).unwrap()) {
                                 log_message(&log_clone, "Hotkey PRESSED!", &ctx_clone);
                                 let _ = tx.send(());
                             }
@@ -312,9 +314,9 @@ impl App {
                     EventType::KeyRelease(key) => {
                         if *is_capturing && !temp_capture_set.is_empty() {
                             let mut final_hotkey = hotkey_arc.lock().unwrap();
-                            *final_hotkey = temp_capture_set.clone();
+                            // *final_hotkey = temp_capture_set.clone();
                             let key_names: Vec<String> =
-                                final_hotkey.iter().map(key_to_string).collect();
+                                vec![format!("{:?}", final_hotkey.key.clone().unwrap())];
                             let display_text = key_names.join(" + ");
                             let _ = hotkey_text_sender.send(display_text);
                             temp_capture_set.clear();
@@ -413,20 +415,14 @@ impl eframe::App for App {
                     ui.text_edit_singleline(&mut *self.delay.lock().unwrap());
 
                     ui.add_space(10.0);
-
-                    let mut is_capturing = self.is_capturing_hotkey.lock().unwrap();
-                    let button_text = if *is_capturing {
-                        "Recording..."
-                    } else {
-                        "Set Hotkey"
-                    };
-                    if ui.add_sized([100.0, 30.0], egui::Button::new(button_text)).clicked() && !*is_capturing {
-                        *is_capturing = true;
+                    // let mut is_capturing = self.is_capturing_hotkey.lock().unwrap();
+                    if ui.add_sized([100.0, 30.0], KeyBindWidget::new(&mut self.hotkey.lock().unwrap())).clicked() {
+                        //*is_capturing = true;
                         self.hotkey_display_text.clear();
-                        let _ = self.hotkey_text_sender.send("Recording...".to_string());
+                        //let _ = self.hotkey_text_sender.send("Recording...".to_string());
                         log_message(&self.debug_log, "Started capturing new hotkey.", ctx);
                     }
-                    ui.label(format!("Hotkey: {}", &self.hotkey_display_text));
+                    //ui.label(format!("Hotkey: {}", &self.hotkey_display_text));
                 });
             });
 

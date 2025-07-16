@@ -13,6 +13,7 @@ egui-file-dialog = "0.10.0"
 enigo = "0.5.0"
 rdev = "0.5.3"
 re_ui = "0.23.4"
+egui-keybinds = { git = "https://github.com/CottonDestroyer/egui-keybinds.git" }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc = "0.2"
