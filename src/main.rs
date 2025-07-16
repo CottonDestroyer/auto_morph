@@ -11,7 +11,7 @@ fn main() -> eframe::Result {
             .with_resizable(true)
             .with_icon(
                 eframe::icon_data::from_png_bytes(
-                    &include_bytes!("../assets/rocket-lunch.png")[..],
+                    &include_bytes!("../assets/logo.png")[..],
                 )
                 .expect("Couldn't find icon u skibi"),
             ),

@@ -1,4 +1,4 @@
-use crate::utils::{commands, log_message, egui_key_to_rdev_key};
+use crate::utils::{commands, log_message};
 
 #[cfg(target_os = "macos")]
 use {
@@ -25,12 +25,12 @@ use std::{
         mpsc,
     },
 };
-use egui_keybinds::KeyCode;
 #[cfg(target_os = "windows")]
 use {
     crate::windows::key_to_string,
+	crate::utils::egui_key_to_rdev_key,
     rdev::{Event, EventType},
-    egui_keybinds::{KeyBind, KeyBindWidget}
+    egui_keybinds::{KeyBind, KeyBindWidget, KeyCode}
 };
 
 static IS_SIMULATING: AtomicBool = AtomicBool::new(false);
@@ -60,6 +60,7 @@ pub struct App {
     is_capturing_hotkey: Arc<Mutex<bool>>,
     hotkey_display_text: String,
     hotkey_text_receiver: mpsc::Receiver<String>,
+    #[cfg(target_os = "windows")]
     hotkey_text_sender: mpsc::Sender<String>,
 }
 
@@ -93,6 +94,7 @@ impl App {
             is_capturing_hotkey: Arc::new(Mutex::new(false)),
             hotkey_display_text: "Right Shift".to_string(),
             hotkey_text_receiver: hotkey_text_rx,
+		    #[cfg(target_os = "windows")]
             hotkey_text_sender: hotkey_text_tx.clone(),
         };
 
@@ -414,15 +416,38 @@ impl eframe::App for App {
                     ui.label("Delay (ms):");
                     ui.text_edit_singleline(&mut *self.delay.lock().unwrap());
 
-                    ui.add_space(10.0);
-                    // let mut is_capturing = self.is_capturing_hotkey.lock().unwrap();
-                    if ui.add_sized([100.0, 30.0], KeyBindWidget::new(&mut self.hotkey.lock().unwrap())).clicked() {
-                        //*is_capturing = true;
-                        self.hotkey_display_text.clear();
-                        //let _ = self.hotkey_text_sender.send("Recording...".to_string());
-                        log_message(&self.debug_log, "Started capturing new hotkey.", ctx);
-                    }
-                    //ui.label(format!("Hotkey: {}", &self.hotkey_display_text));
+					ui.add_space(10.0);
+					ui.separator();
+					ui.add_space(10.0);
+
+					// ## Windows-specific UI for hotkey ##
+					#[cfg(target_os = "windows")]
+					{
+					    ui.label("Hotkey:");
+					    // Use the KeyBindWidget directly on Windows
+					    ui.add_sized([100.0, 30.0], KeyBindWidget::new(&mut self.hotkey.lock().unwrap()));
+					}
+
+					// ## macOS-specific UI for hotkey ##
+					#[cfg(target_os = "macos")]
+					{
+					    ui.label("Hotkey:");
+					    let mut is_capturing = self.is_capturing_hotkey.lock().unwrap();
+
+					    // Use a standard button to toggle capture mode on macOS
+					    let button_text = if *is_capturing {
+					        "Recording... Press keys to set."
+					    } else {
+					        &self.hotkey_display_text
+					    };
+
+					    if ui.button(button_text).clicked() {
+					        *is_capturing = !*is_capturing;
+					        if *is_capturing {
+					            log_message(&self.debug_log, "Started capturing new hotkey.", ctx);
+					        }
+					    }
+					}
                 });
             });
 
