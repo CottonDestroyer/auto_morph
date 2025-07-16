@@ -10,10 +10,8 @@ fn main() -> eframe::Result {
             .with_min_inner_size([700.0, 650.0])
             .with_resizable(true)
             .with_icon(
-                eframe::icon_data::from_png_bytes(
-                    &include_bytes!("../assets/logo.png")[..],
-                )
-                .expect("Couldn't find icon u skibi"),
+                eframe::icon_data::from_png_bytes(&include_bytes!("../assets/logo.png")[..])
+                    .expect("Couldn't find icon u skibi"),
             ),
         renderer: eframe::Renderer::Glow,
         ..Default::default()

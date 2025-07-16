@@ -27,10 +27,9 @@ use std::{
 };
 #[cfg(target_os = "windows")]
 use {
-    crate::windows::key_to_string,
-	crate::utils::egui_key_to_rdev_key,
+    crate::windows::{egui_key_to_rdev_key, key_to_string},
+    egui_keybinds::{KeyBind, KeyBindWidget, KeyCode},
     rdev::{Event, EventType},
-    egui_keybinds::{KeyBind, KeyBindWidget, KeyCode}
 };
 
 static IS_SIMULATING: AtomicBool = AtomicBool::new(false);
@@ -60,8 +59,6 @@ pub struct App {
     is_capturing_hotkey: Arc<Mutex<bool>>,
     hotkey_display_text: String,
     hotkey_text_receiver: mpsc::Receiver<String>,
-    #[cfg(target_os = "windows")]
-    hotkey_text_sender: mpsc::Sender<String>,
 }
 
 impl App {
@@ -71,15 +68,15 @@ impl App {
         let debug_log = Arc::new(Mutex::new(Vec::new()));
         let ctx = cc.egui_ctx.clone();
         re_ui::apply_style_and_install_loaders(&ctx);
-        
+
         let mut style = (*cc.egui_ctx.style()).clone();
-        
+
         style.visuals.widgets.inactive.bg_stroke = egui::Stroke::new(
-            1.0, // Width
+            1.0,                          // Width
             egui::Color32::from_gray(80), // Color
         );
         cc.egui_ctx.set_style(style);
-        
+
         let app = Self {
             cmds: Arc::new(Mutex::new(String::new())),
             txt_cmds: String::new(),
@@ -94,8 +91,6 @@ impl App {
             is_capturing_hotkey: Arc::new(Mutex::new(false)),
             hotkey_display_text: "Right Shift".to_string(),
             hotkey_text_receiver: hotkey_text_rx,
-		    #[cfg(target_os = "windows")]
-            hotkey_text_sender: hotkey_text_tx.clone(),
         };
 
         app.listen(
@@ -307,7 +302,12 @@ impl App {
                             let _ = hotkey_text_sender.send(key_names.join(" + "));
                         } else {
                             let target_hotkey = hotkey_arc.lock().unwrap();
-                            if p_keys.contains(&egui_key_to_rdev_key(target_hotkey.key.clone().unwrap_or(KeyCode::RShift)).unwrap()) {
+                            if p_keys.contains(
+                                &egui_key_to_rdev_key(
+                                    target_hotkey.key.clone().unwrap_or(KeyCode::RShift),
+                                )
+                                .unwrap(),
+                            ) {
                                 log_message(&log_clone, "Hotkey PRESSED!", &ctx_clone);
                                 let _ = tx.send(());
                             }
@@ -315,7 +315,7 @@ impl App {
                     }
                     EventType::KeyRelease(key) => {
                         if *is_capturing && !temp_capture_set.is_empty() {
-                            let mut final_hotkey = hotkey_arc.lock().unwrap();
+                            let final_hotkey = hotkey_arc.lock().unwrap();
                             // *final_hotkey = temp_capture_set.clone();
                             let key_names: Vec<String> =
                                 vec![format!("{:?}", final_hotkey.key.clone().unwrap())];
@@ -398,7 +398,10 @@ impl eframe::App for App {
                     ui.add_space(10.0);
 
                     ui.label("File:");
-                    if ui.add_sized([100.0, 30.0], egui::Button::new("Pick File")).clicked() {
+                    if ui
+                        .add_sized([100.0, 30.0], egui::Button::new("Pick File"))
+                        .clicked()
+                    {
                         self.file_dialog.pick_file();
                     }
                     if let Some(path) = &self.file {
@@ -416,38 +419,41 @@ impl eframe::App for App {
                     ui.label("Delay (ms):");
                     ui.text_edit_singleline(&mut *self.delay.lock().unwrap());
 
-					ui.add_space(10.0);
-					ui.separator();
-					ui.add_space(10.0);
+                    ui.add_space(10.0);
+                    ui.separator();
+                    ui.add_space(10.0);
 
-					// ## Windows-specific UI for hotkey ##
-					#[cfg(target_os = "windows")]
-					{
-					    ui.label("Hotkey:");
-					    // Use the KeyBindWidget directly on Windows
-					    ui.add_sized([100.0, 30.0], KeyBindWidget::new(&mut self.hotkey.lock().unwrap()));
-					}
+                    // ## Windows-specific UI for hotkey ##
+                    #[cfg(target_os = "windows")]
+                    {
+                        ui.label("Hotkey:");
+                        // Use the KeyBindWidget directly on Windows
+                        ui.add_sized(
+                            [100.0, 30.0],
+                            KeyBindWidget::new(&mut self.hotkey.lock().unwrap()),
+                        );
+                    }
 
-					// ## macOS-specific UI for hotkey ##
-					#[cfg(target_os = "macos")]
-					{
-					    ui.label("Hotkey:");
-					    let mut is_capturing = self.is_capturing_hotkey.lock().unwrap();
+                    // ## macOS-specific UI for hotkey ##
+                    #[cfg(target_os = "macos")]
+                    {
+                        ui.label("Hotkey:");
+                        let mut is_capturing = self.is_capturing_hotkey.lock().unwrap();
 
-					    // Use a standard button to toggle capture mode on macOS
-					    let button_text = if *is_capturing {
-					        "Recording... Press keys to set."
-					    } else {
-					        &self.hotkey_display_text
-					    };
+                        // Use a standard button to toggle capture mode on macOS
+                        let button_text = if *is_capturing {
+                            "Recording... Press keys to set."
+                        } else {
+                            &self.hotkey_display_text
+                        };
 
-					    if ui.button(button_text).clicked() {
-					        *is_capturing = !*is_capturing;
-					        if *is_capturing {
-					            log_message(&self.debug_log, "Started capturing new hotkey.", ctx);
-					        }
-					    }
-					}
+                        if ui.button(button_text).clicked() {
+                            *is_capturing = !*is_capturing;
+                            if *is_capturing {
+                                log_message(&self.debug_log, "Started capturing new hotkey.", ctx);
+                            }
+                        }
+                    }
                 });
             });
 
