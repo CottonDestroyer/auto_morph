@@ -2,7 +2,9 @@
 
 `auto_morph` is a Rust GUI SCP:RP morpher.
 
-![image](https://github.com/user-attachments/assets/1da06b32-8fe8-4175-a5fa-4a8986365dda)
+<img width="1202" height="832" alt="image" src="https://github.com/user-attachments/assets/6da9cf5d-5895-465c-9848-240dc0258f20" />
+
+
 
 
 
