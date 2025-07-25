@@ -8,6 +8,40 @@ pub fn commands(cmds: &str, delay: u64, log: Arc<Mutex<Vec<String>>>, ctx: &egui
     let mut clipboard = ClipboardContext::new().expect("Failed to get clipboard context.");
     let original_clipboard = clipboard.get_contents().ok();
 
+    if cmds.starts_with(":run") || cmds.starts_with("run") {
+        let mut command = cmds.trim();
+        if command.starts_with(":") {
+            command = &command[1..];
+        }
+
+        if !command.is_empty() {
+            log_message(&log, &format!("Running run command: {command}"), ctx);
+            #[cfg(target_os = "windows")]
+            {
+                enigo.raw(40, Direction::Click).unwrap()
+            }
+            #[cfg(target_os = "macos")]
+            {
+                enigo.raw(39, Direction::Click).unwrap()
+            }
+            std::thread::sleep(std::time::Duration::from_millis(delay));
+            enigo.key(Key::Backspace, Direction::Click).unwrap();
+            std::thread::sleep(std::time::Duration::from_millis(delay / 2));
+            copy_paste(command, &mut enigo, &mut clipboard);
+            std::thread::sleep(std::time::Duration::from_millis(delay));
+            enigo.key(Key::Return, Direction::Click).unwrap();
+            std::thread::sleep(std::time::Duration::from_millis(delay));
+        }
+
+        if let Some(original) = original_clipboard {
+            if clipboard.set_contents(original).is_ok() {
+                log_message(&log, "Clipboard restored.", ctx);
+            }
+        }
+        log_message(&log, "Run command finished.", ctx);
+        return;
+    }
+
     for mut line in cmds.lines() {
         if line.trim().is_empty() {
             continue;
